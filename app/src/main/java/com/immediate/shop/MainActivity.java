@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         setupWebView();
 
         retryButton.setOnClickListener(v -> loadSite());
-        swipeRefresh.setOnRefreshListener(this)::loadSite);
+        swipeRefresh.setOnRefreshListener(this::loadSite);
 
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState);
