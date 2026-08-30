@@ -1,0 +1,109 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.immediate.shop"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+7-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:5:5-8:84
+8        android:minSdkVersion="21"
+8-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:6:9-35
+9        android:targetSdkVersion="33" />
+9-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:7:9-38
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:10:5-67
+11-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:10:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:11:5-79
+12-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:11:22-76
+13    <uses-permission android:name="android.permission.CAMERA" />
+13-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:12:5-65
+13-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:12:22-62
+14
+15    <uses-feature
+15-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:13:5-15:36
+16        android:name="android.hardware.camera"
+16-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:14:9-47
+17        android:required="false" />
+17-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:15:9-33
+18
+19    <permission
+19-->[androidx.core:core:1.9.0] /root/.gradle/caches/transforms-3/a309491863f1cad1388d82071cb60f8c/transformed/core-1.9.0/AndroidManifest.xml:22:5-24:47
+20        android:name="com.immediate.shop.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+20-->[androidx.core:core:1.9.0] /root/.gradle/caches/transforms-3/a309491863f1cad1388d82071cb60f8c/transformed/core-1.9.0/AndroidManifest.xml:23:9-81
+21        android:protectionLevel="signature" />
+21-->[androidx.core:core:1.9.0] /root/.gradle/caches/transforms-3/a309491863f1cad1388d82071cb60f8c/transformed/core-1.9.0/AndroidManifest.xml:24:9-44
+22
+23    <uses-permission android:name="com.immediate.shop.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+23-->[androidx.core:core:1.9.0] /root/.gradle/caches/transforms-3/a309491863f1cad1388d82071cb60f8c/transformed/core-1.9.0/AndroidManifest.xml:26:5-97
+23-->[androidx.core:core:1.9.0] /root/.gradle/caches/transforms-3/a309491863f1cad1388d82071cb60f8c/transformed/core-1.9.0/AndroidManifest.xml:26:22-94
+24
+25    <application
+25-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:17:5-37:19
+26        android:allowBackup="true"
+26-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:18:9-35
+27        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+27-->[androidx.core:core:1.9.0] /root/.gradle/caches/transforms-3/a309491863f1cad1388d82071cb60f8c/transformed/core-1.9.0/AndroidManifest.xml:28:18-86
+28        android:debuggable="true"
+29        android:extractNativeLibs="true"
+30        android:icon="@mipmap/ic_launcher"
+30-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:19:9-43
+31        android:label="@string/app_name"
+31-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:20:9-41
+32        android:networkSecurityConfig="@xml/network_security_config"
+32-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:24:9-69
+33        android:roundIcon="@mipmap/ic_launcher"
+33-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:21:9-48
+34        android:supportsRtl="true"
+34-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:22:9-35
+35        android:theme="@style/Theme.ImmediateShop"
+35-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:25:9-51
+36        android:usesCleartextTraffic="true" >
+36-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:23:9-44
+37        <activity
+37-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:27:9-36:20
+38            android:name="com.immediate.shop.MainActivity"
+38-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:28:13-41
+39            android:configChanges="orientation|screenSize|keyboardHidden"
+39-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:29:13-74
+40            android:exported="true"
+40-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:30:13-36
+41            android:launchMode="singleTask" >
+41-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:31:13-44
+42            <intent-filter>
+42-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:32:13-35:29
+43                <action android:name="android.intent.action.MAIN" />
+43-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:33:17-69
+43-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:33:25-66
+44
+45                <category android:name="android.intent.category.LAUNCHER" />
+45-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:34:17-77
+45-->/mnt/sdcard/Download/ImmediateShop-WebViewApp-v2/WebViewApp/app/src/main/AndroidManifest.xml:34:27-74
+46            </intent-filter>
+47        </activity>
+48
+49        <provider
+49-->[androidx.emoji2:emoji2:1.2.0] /root/.gradle/caches/transforms-3/6db5aa862a49de8667f2a7b9b0bf2022/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+50            android:name="androidx.startup.InitializationProvider"
+50-->[androidx.emoji2:emoji2:1.2.0] /root/.gradle/caches/transforms-3/6db5aa862a49de8667f2a7b9b0bf2022/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:25:13-67
+51            android:authorities="com.immediate.shop.androidx-startup"
+51-->[androidx.emoji2:emoji2:1.2.0] /root/.gradle/caches/transforms-3/6db5aa862a49de8667f2a7b9b0bf2022/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:26:13-68
+52            android:exported="false" >
+52-->[androidx.emoji2:emoji2:1.2.0] /root/.gradle/caches/transforms-3/6db5aa862a49de8667f2a7b9b0bf2022/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:27:13-37
+53            <meta-data
+53-->[androidx.emoji2:emoji2:1.2.0] /root/.gradle/caches/transforms-3/6db5aa862a49de8667f2a7b9b0bf2022/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+54                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+54-->[androidx.emoji2:emoji2:1.2.0] /root/.gradle/caches/transforms-3/6db5aa862a49de8667f2a7b9b0bf2022/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:30:17-75
+55                android:value="androidx.startup" />
+55-->[androidx.emoji2:emoji2:1.2.0] /root/.gradle/caches/transforms-3/6db5aa862a49de8667f2a7b9b0bf2022/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:31:17-49
+56            <meta-data
+56-->[androidx.lifecycle:lifecycle-process:2.4.1] /root/.gradle/caches/transforms-3/b7bd10e3360a468a9b79e7dca2ad5240/transformed/jetified-lifecycle-process-2.4.1/AndroidManifest.xml:31:13-33:52
+57                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+57-->[androidx.lifecycle:lifecycle-process:2.4.1] /root/.gradle/caches/transforms-3/b7bd10e3360a468a9b79e7dca2ad5240/transformed/jetified-lifecycle-process-2.4.1/AndroidManifest.xml:32:17-78
+58                android:value="androidx.startup" />
+58-->[androidx.lifecycle:lifecycle-process:2.4.1] /root/.gradle/caches/transforms-3/b7bd10e3360a468a9b79e7dca2ad5240/transformed/jetified-lifecycle-process-2.4.1/AndroidManifest.xml:33:17-49
+59        </provider>
+60    </application>
+61
+62</manifest>
