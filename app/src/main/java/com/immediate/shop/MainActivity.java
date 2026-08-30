@@ -1,20 +1,14 @@
 package com.immediate.shop;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.CookieManager;
-import android.webkit.DownloadListener;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -27,8 +21,6 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,9 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST_CODE = 51426;
-    private static final int CAMERA_PERMISSION_REQUEST = 9001;
 
-    // এখানে আপনার সাইটের ডোমেইন বসান, যাতে শুধু এই সাইটের লিংক অ্যাপের ভিতরে খোলে
     private static final String SITE_HOST = "immediate.rf.gd";
 
     @Override
@@ -110,7 +100,6 @@ public class MainActivity extends AppCompatActivity {
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (url == null) return false;
 
-                // Non-http(s) links (tel:, mailto:, whatsapp, upi payment apps ইত্যাদি) বাইরের অ্যাপে খুলবে
                 if (!url.startsWith("http://") && !url.startsWith("https://")) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -120,7 +109,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     return true;
                 }
-                // নিজের সাইটের সব লিংক (অ্যাডমিন প্যানেল সহ) অ্যাপের ভিতরেই লোড হবে
                 return false;
             }
 
@@ -156,7 +144,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            // ছবি/ফাইল আপলোড সাপোর্ট — ই-কমার্স অ্যাডমিন প্যানেলে প্রোডাক্ট ছবি আপলোডের জন্য দরকার
             @Override
             public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> callback, FileChooserParams params) {
                 if (filePathCallback != null) {
@@ -174,15 +161,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return true;
             }
-
-            // ক্যামেরা পারমিশন প্রম্পট (QR স্ক্যান/ছবি তোলার ফিচার থাকলে)
-            @Override
-            public void onPermissionRequest(final PermissionRequest request) {
-                runOnUiThread(() -> request.grant(request.getResources()));
-            }
         });
 
-        // সাইট থেকে ফাইল ডাউনলোড করলে (ইনভয়েস/রিসিট পিডিএফ ইত্যাদি) ব্রাউজারে/ডাউনলোড ম্যানেজারে পাঠানো হবে
         webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
             try {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -191,12 +171,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "ডাউনলোড শুরু করা যায়নি", Toast.LENGTH_SHORT).show();
             }
         });
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST);
-        }
     }
 
     @Override
