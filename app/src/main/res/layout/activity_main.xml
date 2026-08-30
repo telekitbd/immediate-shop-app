@@ -38,6 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="ইন্টারনেট সংযোগ নেই"
+            android:textColor="?android:attr/textColorPrimary"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -46,6 +47,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="দয়া করে আপনার নেটওয়ার্ক চেক করে আবার চেষ্টা করুন"
+            android:textColor="?android:attr/textColorSecondary"
             android:textAlignment="center" />
 
         <Button
