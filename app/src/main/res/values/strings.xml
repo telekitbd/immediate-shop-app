@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Immediate Shop</string>
+    <string name="app_name">Immediate</string>
     <!-- এখানে আপনার ওয়েবসাইটের লিংক দিন -->
     <string name="site_url">https://immediate.rf.gd/</string>
 </resources>
