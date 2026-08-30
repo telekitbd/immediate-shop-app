@@ -4,9 +4,12 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.CookieManager;
@@ -22,8 +25,20 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
 
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST_CODE = 51426;
+    private static final int NOTIFICATION_PERMISSION_REQUEST = 8801;
+
+    private static final String VERSION_CHECK_URL =
+            "https://raw.githubusercontent.com/telekitbd/immediate-shop-app/main/version.json";
 
     private static final String SITE_HOST = "immediate.rf.gd";
 
@@ -59,6 +78,94 @@ public class MainActivity extends AppCompatActivity {
         } else {
             loadSite();
         }
+
+        requestNotificationPermissionIfNeeded();
+        scheduleNewProductCheck();
+        checkForAppUpdate();
+    }
+
+    private void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        NOTIFICATION_PERMISSION_REQUEST);
+            }
+        }
+    }
+
+    private void scheduleNewProductCheck() {
+        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(
+                NewProductWorker.class, 6, TimeUnit.HOURS)
+                .build();
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "new_product_check", ExistingPeriodicWorkPolicy.KEEP, request);
+    }
+
+    private void checkForAppUpdate() {
+        new Thread(() -> {
+            try {
+                URL url = new URL(VERSION_CHECK_URL);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder content = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    content.append(line);
+                }
+                reader.close();
+                conn.disconnect();
+
+                JSONObject json = new JSONObject(content.toString());
+                int latestVersionCode = json.getInt("versionCode");
+                String versionName = json.optString("versionName", "");
+                String apkUrl = json.optString("apkUrl", "");
+                String message = json.optString("message", "নতুন ভার্সন পাওয়া গেছে!");
+
+                int currentVersionCode = getCurrentVersionCode();
+
+                if (latestVersionCode > currentVersionCode) {
+                    runOnUiThread(() -> showUpdateDialog(versionName, message, apkUrl));
+                }
+            } catch (Exception ignored) {
+            }
+        }).start();
+    }
+
+    private int getCurrentVersionCode() {
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
+            return info.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            return 0;
+        }
+    }
+
+    private void showUpdateDialog(String versionName, String message, String apkUrl) {
+        String title = versionName.isEmpty()
+                ? "নতুন ভার্সন উপলব্ধ"
+                : "নতুন ভার্সন উপলব্ধ (" + versionName + ")";
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setCancelable(true);
+
+        if (!apkUrl.isEmpty()) {
+            builder.setPositiveButton("ডাউনলোড করুন", (dialog, which) -> {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(apkUrl));
+                startActivity(intent);
+            });
+            builder.setNegativeButton("পরে", (dialog, which) -> dialog.dismiss());
+        } else {
+            builder.setPositiveButton("ঠিক আছে", (dialog, which) -> dialog.dismiss());
+        }
+
+        builder.show();
     }
 
     private void loadSite() {
