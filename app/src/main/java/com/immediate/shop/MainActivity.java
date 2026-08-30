@@ -1,14 +1,13 @@
 package com.immediate.shop;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.PermissionRequest;
@@ -35,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
 
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST_CODE = 51426;
-    private boolean backPressedOnce = false;
 
     private static final String SITE_HOST = "immediate.rf.gd";
 
@@ -206,14 +204,16 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if (backPressedOnce) {
-            super.onBackPressed();
-            return;
-        }
-
-        backPressedOnce = true;
-        Toast.makeText(this, "আবার ব্যাক চাপুন অ্যাপ থেকে বের হতে", Toast.LENGTH_SHORT).show();
-        new Handler(Looper.getMainLooper()).postDelayed(() -> backPressedOnce = false, 2000);
+        new AlertDialog.Builder(this)
+                .setTitle("অ্যাপ থেকে বের হবেন?")
+                .setMessage("আপনি কি নিশ্চিতভাবে Immediate অ্যাপ থেকে বের হতে চান?")
+                .setPositiveButton("হ্যাঁ", (dialog, which) -> {
+                    dialog.dismiss();
+                    finish();
+                })
+                .setNegativeButton("না", (dialog, which) -> dialog.dismiss())
+                .setCancelable(true)
+                .show();
     }
 
     @Override
