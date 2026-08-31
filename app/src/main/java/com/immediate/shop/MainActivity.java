@@ -51,9 +51,11 @@ public class MainActivity extends AppCompatActivity {
     private static final int FILE_CHOOSER_REQUEST_CODE = 51426;
     private static final int NOTIFICATION_PERMISSION_REQUEST = 8801;
 
+    // GitHub-à¦ à¦°à¦¾à¦–à¦¾ version.json à¦«à¦¾à¦‡à¦²à§‡à¦° raw à¦²à¦¿à¦‚à¦• â€” à¦¨à¦¤à§à¦¨ à¦­à¦¾à¦°à§à¦¸à¦¨ à¦°à¦¿à¦²à¦¿à¦œ à¦¦à¦¿à¦²à§‡ à¦à¦‡ à¦«à¦¾à¦‡à¦² à¦†à¦ªà¦¡à§‡à¦Ÿ à¦•à¦°à¦¬à§‡à¦¨
     private static final String VERSION_CHECK_URL =
             "https://raw.githubusercontent.com/telekitbd/immediate-shop-app/main/version.json";
 
+    // à¦à¦–à¦¾à¦¨à§‡ à¦†à¦ªà¦¨à¦¾à¦° à¦¸à¦¾à¦‡à¦Ÿà§‡à¦° à¦¡à§‹à¦®à§‡à¦‡à¦¨ à¦¬à¦¸à¦¾à¦¨, à¦¯à¦¾à¦¤à§‡ à¦¶à§à¦§à§ à¦à¦‡ à¦¸à¦¾à¦‡à¦Ÿà§‡à¦° à¦²à¦¿à¦‚à¦• à¦…à§à¦¯à¦¾à¦ªà§‡à¦° à¦­à¦¿à¦¤à¦°à§‡ à¦–à§‹à¦²à§‡
     private static final String SITE_HOST = "immediate.rf.gd";
 
     @Override
@@ -95,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // à¦ªà§à¦°à¦¤à¦¿ à§¬ à¦˜à¦£à§à¦Ÿà¦¾à¦¯à¦¼ à¦¬à§à¦¯à¦¾à¦•à§à¦°à¦¾à¦‰à¦¨à§à¦¡à§‡ à¦¸à¦¾à¦‡à¦Ÿ à¦šà§‡à¦• à¦•à¦°à§‡ à¦¨à¦¤à§à¦¨ à¦ªà§à¦°à§‹à¦¡à¦¾à¦•à§à¦Ÿ/à¦•à¦¨à¦Ÿà§‡à¦¨à§à¦Ÿ à¦à¦²à§‡ notification à¦¦à§‡à¦–à¦¾à¦¬à§‡
     private void scheduleNewProductCheck() {
         PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(
                 NewProductWorker.class, 6, TimeUnit.HOURS)
@@ -103,398 +106,4 @@ public class MainActivity extends AppCompatActivity {
                 "new_product_check", ExistingPeriodicWorkPolicy.KEEP, request);
     }
 
-    private void checkForAppUpdate() {
-        new Thread(() -> {
-            try {
-                URL url = new URL(VERSION_CHECK_URL);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
-
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder content = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    content.append(line);
-                }
-                reader.close();
-                conn.disconnect();
-
-                JSONObject json = new JSONObject(content.toString());
-                int latestVersionCode = json.getInt("versionCode");
-                String versionName = json.optString("versionName", "");
-                String apkUrl = json.optString("apkUrl", "");
-                String message = json.optString("message", "à¦¨à¦¤à§à¦¨ à¦­à¦¾à¦°à§à¦¸à¦¨ à¦ªà¦¾à¦“à¦¯à¦¼à¦¾ à¦—à§‡à¦›à§‡!");
-                boolean forceUpdate = json.optBoolean("forceUpdate", false);
-                int minSupportedVersionCode = json.optInt("minSupportedVersionCode", 0);
-
-                int currentVersionCode = getCurrentVersionCode();
-
-                boolean mustUpdate = forceU
-
-
-
-cat > app/src/main/java/com/immediate/shop/MainActivity.java << 'EOF'
-package com.immediate.shop;
-
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.view.View;
-import android.webkit.CookieManager;
-import android.webkit.PermissionRequest;
-import android.webkit.ValueCallback;
-import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.Toast;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
-
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.concurrent.TimeUnit;
-
-public class MainActivity extends AppCompatActivity {
-
-    private WebView webView;
-    private SwipeRefreshLayout swipeRefresh;
-    private ProgressBar progressBar;
-    private LinearLayout offlineLayout;
-
-    private ValueCallback<Uri[]> filePathCallback;
-    private static final int FILE_CHOOSER_REQUEST_CODE = 51426;
-    private static final int NOTIFICATION_PERMISSION_REQUEST = 8801;
-
-    private static final String VERSION_CHECK_URL =
-            "https://raw.githubusercontent.com/telekitbd/immediate-shop-app/main/version.json";
-
-    private static final String SITE_HOST = "immediate.rf.gd";
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        webView = findViewById(R.id.webView);
-        webView.setBackgroundColor(ContextCompat.getColor(this, R.color.white));
-        swipeRefresh = findViewById(R.id.swipeRefresh);
-        progressBar = findViewById(R.id.progressBar);
-        offlineLayout = findViewById(R.id.offlineLayout);
-        Button retryButton = findViewById(R.id.retryButton);
-
-        setupWebView();
-
-        retryButton.setOnClickListener(v -> loadSite());
-        swipeRefresh.setOnRefreshListener(this::loadSite);
-
-        if (savedInstanceState != null) {
-            webView.restoreState(savedInstanceState);
-        } else {
-            loadSite();
-        }
-
-        requestNotificationPermissionIfNeeded();
-        scheduleNewProductCheck();
-        checkForAppUpdate();
-    }
-
-    private void requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT >= 33) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
-                        NOTIFICATION_PERMISSION_REQUEST);
-            }
-        }
-    }
-
-    private void scheduleNewProductCheck() {
-        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(
-                NewProductWorker.class, 6, TimeUnit.HOURS)
-                .build();
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-                "new_product_check", ExistingPeriodicWorkPolicy.KEEP, request);
-    }
-
-    private void checkForAppUpdate() {
-        new Thread(() -> {
-            try {
-                URL url = new URL(VERSION_CHECK_URL);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
-
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder content = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    content.append(line);
-                }
-                reader.close();
-                conn.disconnect();
-
-                JSONObject json = new JSONObject(content.toString());
-                int latestVersionCode = json.getInt("versionCode");
-                String versionName = json.optString("versionName", "");
-                String apkUrl = json.optString("apkUrl", "");
-                String message = json.optString("message", "à¦¨à¦¤à§à¦¨ à¦­à¦¾à¦°à§à¦¸à¦¨ à¦ªà¦¾à¦“à¦¯à¦¼à¦¾ à¦—à§‡à¦›à§‡!");
-                boolean forceUpdate = json.optBoolean("forceUpdate", false);
-                int minSupportedVersionCode = json.optInt("minSupportedVersionCode", 0);
-
-                int currentVersionCode = getCurrentVersionCode();
-
-                boolean mustUpdate = forceUpdate && currentVersionCode < minSupportedVersionCode;
-
-                if (mustUpdate) {
-                    runOnUiThread(() -> showUpdateDialog(versionName, message, apkUrl, true));
-                } else if (latestVersionCode > currentVersionCode) {
-                    runOnUiThread(() -> showUpdateDialog(versionName, message, apkUrl, false));
-                }
-            } catch (Exception ignored) {
-            }
-        }).start();
-    }
-
-    private int getCurrentVersionCode() {
-        try {
-            PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
-            return info.versionCode;
-        } catch (PackageManager.NameNotFoundException e) {
-            return 0;
-        }
-    }
-
-    private void showUpdateDialog(String versionName, String message, String apkUrl, boolean forceUpdate) {
-        String title = versionName.isEmpty()
-                ? "à¦¨à¦¤à§à¦¨ à¦­à¦¾à¦°à§à¦¸à¦¨ à¦‰à¦ªà¦²à¦¬à§à¦§"
-                : "à¦¨à¦¤à§à¦¨ à¦­à¦¾à¦°à§à¦¸à¦¨ à¦‰à¦ªà¦²à¦¬à§à¦§ (" + versionName + ")";
-
-        if (forceUpdate) {
-            title = "à¦†à¦ªà¦¡à§‡à¦Ÿ à¦¬à¦¾à¦§à§à¦¯à¦¤à¦¾à¦®à§‚à¦²à¦•";
-            String finalMessage = message.isEmpty()
-                    ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦ª à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¤à§‡ à¦¹à¦²à§‡ à¦¨à¦¤à§à¦¨ à¦­à¦¾à¦°à§à¦¸à¦¨à§‡ à¦†à¦ªà¦¡à§‡à¦Ÿ à¦•à¦°à¦¾ à¦†à¦¬à¦¶à§à¦¯à¦•à¥¤"
-                    : message + "\n\nà¦à¦‡ à¦…à§à¦¯à¦¾à¦ª à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¤à§‡ à¦¹à¦²à§‡ à¦†à¦ªà¦¡à§‡à¦Ÿ à¦•à¦°à¦¾ à¦†à¦¬à¦¶à§à¦¯à¦•à¥¤";
-
-            AlertDialog dialog = new AlertDialog.Builder(this)
-                    .setTitle(title)
-                    .setMessage(finalMessage)
-                    .setCancelable(false)
-                    .setPositiveButton("à¦à¦–à¦¨à¦‡ à¦†à¦ªà¦¡à§‡à¦Ÿ à¦•à¦°à§à¦¨", null)
-                    .create();
-
-            dialog.setOnShowListener(d -> {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-                    if (!apkUrl.isEmpty()) {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(apkUrl));
-                        startActivity(intent);
-                    }
-                });
-            });
-
-            dialog.show();
-            return;
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this)
-                .setTitle(title)
-                .setMessage(message)
-                .setCancelable(true);
-
-        if (!apkUrl.isEmpty()) {
-            builder.setPositiveButton("à¦¡à¦¾à¦‰à¦¨à¦²à§‹à¦¡ à¦•à¦°à§à¦¨", (dialog, which) -> {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(apkUrl));
-                startActivity(intent);
-            });
-            builder.setNegativeButton("à¦ªà¦°à§‡", (dialog, which) -> dialog.dismiss());
-        } else {
-            builder.setPositiveButton("à¦ à¦¿à¦• à¦†à¦›à§‡", (dialog, which) -> dialog.dismiss());
-        }
-
-        builder.show();
-    }
-
-    private void loadSite() {
-        if (isNetworkAvailable()) {
-            offlineLayout.setVisibility(View.GONE);
-            webView.setVisibility(View.VISIBLE);
-            webView.loadUrl(getString(R.string.site_url));
-        } else {
-            swipeRefresh.setRefreshing(false);
-            offlineLayout.setVisibility(View.VISIBLE);
-            webView.setVisibility(View.GONE);
-            Toast.makeText(this, "à¦‡à¦¨à§à¦Ÿà¦¾à¦°à¦¨à§‡à¦Ÿ à¦¸à¦‚à¦¯à§‹à¦— à¦¨à§‡à¦‡", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private boolean isNetworkAvailable() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo info = cm != null ? cm.getActiveNetworkInfo() : null;
-        return info != null && info.isConnected();
-    }
-
-    @SuppressWarnings("SetJavaScriptEnabled")
-    private void setupWebView() {
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
-        settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
-        settings.setSupportZoom(true);
-        settings.setBuiltInZoomControls(false);
-        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        settings.setAllowFileAccess(true);
-        settings.setMediaPlaybackRequiresUserGesture(false);
-
-        CookieManager.getInstance().setAcceptCookie(true);
-        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
-
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url == null) return false;
-
-                if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                    try {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        Toast.makeText(MainActivity.this, "à¦à¦‡ à¦²à¦¿à¦‚à¦•à¦Ÿà¦¿ à¦–à§‹à¦²à¦¾à¦° à¦®à¦¤à§‹ à¦•à§‹à¦¨à§‹ à¦…à§à¦¯à¦¾à¦ª à¦¨à§‡à¦‡", Toast.LENGTH_SHORT).show();
-                    }
-                    return true;
-                }
-                return false;
-            }
-
-            @Override
-            public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                progressBar.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                progressBar.setVisibility(View.GONE);
-                swipeRefresh.setRefreshing(false);
-            }
-
-            @Override
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                super.onReceivedError(view, errorCode, description, failingUrl);
-                if (!isNetworkAvailable()) {
-                    offlineLayout.setVisibility(View.VISIBLE);
-                    webView.setVisibility(View.GONE);
-                }
-            }
-        });
-
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                progressBar.setProgress(newProgress);
-                if (newProgress >= 100) {
-                    progressBar.setVisibility(View.GONE);
-                }
-            }
-
-            @Override
-            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> callback, FileChooserParams params) {
-                if (filePathCallback != null) {
-                    filePathCallback.onReceiveValue(null);
-                }
-                filePathCallback = callback;
-
-                Intent intent = params.createIntent();
-                try {
-                    startActivityForResult(intent, FILE_CHOOSER_REQUEST_CODE);
-                } catch (Exception e) {
-                    filePathCallback = null;
-                    Toast.makeText(MainActivity.this, "à¦«à¦¾à¦‡à¦² à¦¬à¦¾à¦›à¦¾à¦‡ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿", Toast.LENGTH_SHORT).show();
-                    return false;
-                }
-                return true;
-            }
-        });
-
-        webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
-            try {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                startActivity(intent);
-            } catch (Exception e) {
-                Toast.makeText(this, "à¦¡à¦¾à¦‰à¦¨à¦²à§‹à¦¡ à¦¶à§à¦°à§ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == FILE_CHOOSER_REQUEST_CODE) {
-            if (filePathCallback == null) {
-                super.onActivityResult(requestCode, resultCode, data);
-                return;
-            }
-            Uri[] results = null;
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                String dataString = data.getDataString();
-                if (dataString != null) {
-                    results = new Uri[]{Uri.parse(dataString)};
-                }
-            }
-            filePathCallback.onReceiveValue(results);
-            filePathCallback = null;
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack();
-            return;
-        }
-
-        new AlertDialog.Builder(this)
-                .setTitle("à¦…à§à¦¯à¦¾à¦ª à¦¥à§‡à¦•à§‡ à¦¬à§‡à¦° à¦¹à¦¬à§‡à¦¨?")
-                .setMessage("à¦†à¦ªà¦¨à¦¿ à¦•à¦¿ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤à¦­à¦¾à¦¬à§‡ Immediate à¦…à§à¦¯à¦¾à¦ª à¦¥à§‡à¦•à§‡ à¦¬à§‡à¦° à¦¹à¦¤à§‡ à¦šà¦¾à¦¨?")
-                .setPositiveButton("à¦¹à§à¦¯à¦¾à¦", (dialog, which) -> {
-                    dialog.dismiss();
-                    finish();
-                })
-                .setNegativeButton("à¦¨à¦¾", (dialog, which) -> dialog.dismiss())
-                .setCancelable(true)
-                .show();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        webView.saveState(outState);
-    }
-}
+    // à¦¨à¦¤à§à¦¨ à¦…à§à¦¯à¦¾à¦ª à¦½‚šû‚šÃ‚ž7‚š»‚š ƒ‚š‚ž‚šo‚žƒ‚šW‚šÿ‚š£‚šøƒ‚šk‚ž‚šTƒ‚šW‚šÃ‚ž€¡Ù•ÉÍ¥½¸¹©Í½¸ƒ‚š—‚ž‚š—‚šÃ‚ž‚šT¤(€€€ÁÉ¥Ù…Ñ”Ù½¥¡•­½ÉÁÁUÁ‘…Ñ” ¤ì(€€€€€€€¹•ÜQ¡É•…  ¤€´øì(€€€€€€€€€€€ÑÉäì(€€€€€€€€€€€€€€€UI0ÕÉ°€ô¹•ÜUI0¡YIM%=9}!-}UI0¤ì(€€€€€€€€€€€€€€€!ÑÑÁUI1½¹¹•Ñ¥½¸½¹¸€ô€¡!ÑÑÁUI1½¹¹•Ñ¥½¸¤ÕÉ°¹½Á•¹½¹¹•Ñ¥½¸ ¤ì(€€€€€€€€€€€€€€€½¹¸¹Í•Ñ½¹¹•ÑQ¥µ•½ÕÐ ÄÀÀÀÀ¤ì(€€€€€€€€€€€€€€€½¹¸¹Í•ÑI•…‘Q¥µ•½ÕÐ ÄÀÀÀÀ¤ì((€€€€€€€€€€€€€€€	Õ™™•É•‘I•…‘•ÈÉ•…‘•È€ô¹•Ü	Õ™™•É•‘I•…‘•È¡¹•Ü%¹ÁÕÑMÑÉ•…µI•…‘•È¡½¹¸¹•Ñ%¹ÁÕÑMÑÉ•…´ ¤¤¤ì(€€€€€€€€€€€€€€€MÑÉ¥¹	Õ¥±‘•È½¹Ñ•¹Ð€ô¹•ÜMÑÉ¥¹	Õ¥±‘•È ¤ì(€€€€€€€€€€€€€€€MÑÉ¥¹œ±¥¹”ì(€€€€€€€€€€€€€€€Ý¡¥±”€ ¡±¥¹”€ôÉ•…‘•È¹É•…‘1¥¹” ¤¤€„ô¹Õ±°¤ì(€€€€€€€€€€€€€€€€€€€½¹Ñ•¹Ð¹…ÁÁ•¹¡±¥¹”¤ì(€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€É•…‘•È¹±½Í” ¤ì(€€€€€€€€€€€€€€€½¹¸¹‘¥Í½¹¹•Ð ¤ì((€€€€€€€€€€€€€€€)M=9=‰©•Ð©Í½¸€ô¹•Ü)M=9=‰©•Ð¡½¹Ñ•¹Ð¹Ñ½MÑÉ¥¹œ ¤¤ì(€€€€€€€€€€€€€€€¥¹Ð±…Ñ•ÍÑY•ÉÍ¥½¹½‘”€ô©Í½¸¹•Ñ%¹Ð ‰Ù•ÉÍ¥½¹½‘”ˆ¤ì(€€€€€€€€€€€€€€€MÑÉ¥¹œÙ•ÉÍ¥½¹9…µ”€ô©Í½¸¹½ÁÑMÑÉ¥¹œ ‰Ù•ÉÍ¥½¹9…µ”ˆ°€ˆˆ¤ì(€€€€€€€€€€€€€€€MÑÉ¥¹œ…Á­UÉ°€ô©Í½¸¹½ÁÑMÑÉ¥¹œ ‰…Á­UÉ°ˆ°€ˆˆ¤ì(€€€€€€€€€€€€€€€MÑÉ¥¹œµ•ÍÍ…”€ô©Í½¸¹½ÁÑMÑÉ¥¹œ ‰µ•ÍÍ…”ˆ°€‹‚š ’€c‚ž‚š ƒ‚š·‚šû‚šÃ‚ž7‚šã‚š ƒ‚š«‚šû‚šO‚š¿‚šó‚šøƒ‚š_‚ž‚šo‚ž„ˆ¤ì(€€€€€€€€€€€€€€€‰½½±•…¸™½É•UÁ‘…Ñ”€ô©Í½¸¹½ÁÑ	½½±•…¸ ‰™½É•UÁ‘…Ñ”ˆ°™…±Í”¤ì(€€€€€€€€€€€€€€€¥¹Ðµ¥¹MÕÁÁ½ÉÑ•‘Y•ÉÍ¥½¹½‘”€ô©Í½¸¹½ÁÑ%¹Ð ‰µ¥¹MÕÁÁ½ÉÑ•‘Y•ÉÍ¥½¹½‘”ˆ°€À¤ì((€€€€€€€€€€€€€€€¥¹ÐÕÉÉ•¹ÑY•ÉÍ¥½¹½‘”€ô•ÑÕÉÉ•¹ÑY•ÉÍ¥½¹½‘” ¤ì((€€€€€€€€€€€€€€€‰½½±•…¸µÕÍÑUÁ‘…Ñ”€ô™½É•UÁ‘…Ñ”€˜˜ÕÉÉ•¹ÑY•ÉÍ¥½¹½‘”€ðµ¥¹MÕÁÁ½ÉÑ•‘Y•ÉÍ¥½¹½‘”ì((€€€€€€€€€€€€€€€¥˜€¡µÕÍÑUÁ‘…Ñ”¤ì(€€€€€€€€€€€€€€€€€€€ÉÕ¹=¹U¥Q¡É•…  ¤€´øÍ¡½ÝUÁ‘…Ñ•¥…±½œ¡Ù•ÉÍ¥½¹9…µ”°µ•ÍÍ…”°…Á­UÉ°°ÑÉÕ”¤¤ì(€€€€€€€€€€€€€€€ô•±Í”¥˜€¡±…Ñ•ÍÑY•ÉÍ¥½¹½‘”€øÕÉÉ•¹ÑY•ÉÍ¥½¹½‘”¤ì(€€€€€€€€€€€€€€€€€€€ÉÕ¹=¹U¥Q¡É•…  ¤€´øÍ¡½ÝUÁ‘…Ñ•¥…±½œ¡Ù•ÉÍ¥½¹9…µ”°µ•ÍÍ…”°…Á­UÉ°°™…±Í”¤¤ì(€€€€€€€€€€€€€€€ô(€€€€€€€€€€€ô…Ñ €¡á•ÁÑ¥½¸¥¹½É•¤ì(€€€€€€€€€€€€€€€€¼¼ƒ‚š‚š£‚ž7‚š‚šû‚šÃ‚š£‚ž‚š|ƒ‚š£‚šøƒ‚š—‚šû‚šW‚šË‚žƒ‚š³‚šøƒ‚šk‚ž‚šTƒ‚š³‚ž7‚š¿‚šÃ‚ž7‚š”ƒ‚šç‚šË‚žƒ‚šk‚ž‚š«‚šk‚šû‚š¨ƒ‚šã‚ž7‚šW‚šÿ‚š¨ƒ‚šW‚šÃ‚š³‚ž(€€€€€€€€€€€ô(€€€€€€€ô¤¹ÍÑ…ÉÐ ¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”¥¹Ð•ÑÕÉÉ•¹ÑY•ÉÍ¥½¹½‘” ¤ì(€€€€€€€ÑÉäì(€€€€€€€€€€€A…­…•%¹™¼¥¹™¼€ô•ÑA…­…•5…¹…•È ¤¹•ÑA…­…•%¹™¼¡•ÑA…­…•9…µ” ¤°€À¤ì(€€€€€€€€€€€É•ÑÕÉ¸¥¹™¼¹Ù•ÉÍ¥½¹½‘”ì(€€€€€€€ô…Ñ €¡A…­…•5…¹…•È¹9…µ•9½Ñ½Õ¹‘á•ÁÑ¥½¸”¤ì(€€€€€€€€€€€É•ÑÕÉ¸€Àì(€€€€€€€ô(€€€ô((€€€ÁÉ¥Ù…Ñ”Ù½¥Í¡½ÝUÁ‘…Ñ•¥…±½œ¡MÑÉ¥¹œÙ•ÉÍ¥½¹9…µ”°MÑÉ¥¹œµ•ÍÍ…”°MÑÉ¥¹œ…Á­UÉ°°‰½½±•…¸™½É•UÁ‘…Ñ”¤ì(€€€€€€€MÑÉ¥¹œÑ¥Ñ±”€ôÙ•ÉÍ¥½¹9…µ”¹¥ÍµÁÑä ¤(€€€€€€€€€€€€€€€€ü€‹‚š£‚š“‚ž‚š ƒ‚š·‚šû‚šÃ‚ž7‚šã‚š ƒ‚š'‚š«‚šË‚š³‚ž7‚šœˆ(€€€€€€€€€€€€€€€€è€‹‚š£‚š“‚ž‚š ƒ‚š·‚šû‚šÃ‚ž7‚šã‚š ƒ‚š'‚š«‚šË‚š³‚ž7‚šœ€ ˆ€¬Ù•ÉÍ¥½¹9…µ”€¬€ˆ¤ˆì((€€€€€€€¥˜€¡™½É•UÁ‘…Ñ”¤ì(€€€€€€€€€€€Ñ¥Ñ±”€ô€‹‚š‚š«‚š‡‚ž‚š|ƒ‚š³‚šû‚šŸ‚ž7‚š¿‚š“‚šû‚š»‚ž‚šË‚šTˆì(€€€€€€€€€€€MÑÉ¥¹œ™¥¹…±5•ÍÍ…”€ôµ•ÍÍ…”¹¥ÍµÁÑä ¤(€€€€€€€€€€€€€€€€€€€€ü€‹‚š?‚šƒ‚š‚ž7‚š¿‚šû‚š¨ƒ‚š³‚ž7‚š¿‚š³‚šç‚šû‚šÀƒ‚šW‚šÃ‚š“‚žƒ‚šç‚šË‚žƒ‚š£‚š“‚ž‚š ƒ‚š·‚šû‚šÃ‚ž7‚šã‚š£‚žƒ‚š‚š«‚š‡‚ž‚š|ƒ‚šW‚šÃ‚šøƒ‚š‚š³‚šÛ‚ž7‚š¿‚šW‚–ˆ(€€€€€€€€€€€€€€€€€€€€èµ•ÍÍ…”€¬€‰q¹q»‚š?‚šƒ‚š‚ž7‚š¿‚šû‚š¨ƒ‚š³‚ž7‚š¿‚š³‚šç‚šû‚šÀƒ‚šW‚šÃ‚š“‚žƒ‚šç‚šË‚žƒ‚š‚š«‚š‡‚ž‚š|ƒ‚šW‚šÃ‚šøƒ‚š‚š³‚šÛ‚ž7‚š¿‚šW‚–ˆì((€€€€€€€€€€€±•ÉÑ¥…±½œ‘¥…±½œ€ô¹•Ü±•ÉÑ¥…±½œ¹	Õ¥±‘•È¡Ñ¡¥Ì¤(€€€€€€€€€€€€€€€€€€€€¹Í•ÑQ¥Ñ±”¡Ñ¥Ñ±”¤(€€€€€€€€€€€€€€€€€€€€¹Í•Ñ5•ÍÍ…”¡™¥¹…±5•ÍÍ…”¤(€€€€€€€€€€€€€€€€€€€€¹Í•Ñ…¹•±…‰±”¡™…±Í”¤(€€€€€€€€€€€€€€€€€€€€¹Í•ÑA½Í¥Ñ¥Ù•	ÕÑÑ½¸ ‹‚š?‚š[‚š£‚šƒ‚š‚š«‚š‡‚ž‚š|ƒ‚šW‚šÃ‚ž‚š ˆ°¹Õ±°¤(€€€€€€€€€€€€€€€€€€€€¹É•…Ñ” ¤ì((€€€€€€€€€€€‘¥…±½œ¹Í•Ñ=¹M¡½Ý1¥ÍÑ•¹•È¡€´øì(€€€€€€€€€€€€€€€‘¥…±½œ¹•Ñ	ÕÑÑ½¸¡±•ÉÑ¥…±½œ¹	UQQ=9}A=M%Q%Y¤¹Í•Ñ=¹±¥­1¥ÍÑ•¹•È¡Ø€´øì(€€€€€€€€€€€€€€€€€€€¥˜€ ……Á­UÉ°¹¥ÍµÁÑä ¤¤ì(€€€€€€€€€€€€€€€€€€€€€€€%¹Ñ•¹Ð¥¹Ñ•¹Ð€ô¹•Ü%¹Ñ•¹Ð¡%¹Ñ•¹Ð¹Q%=9}Y%\°UÉ¤¹Á…ÉÍ”¡…Á­UÉ°¤¤ì(€€€€€€€€€€€€€€€€€€€€€€€ÍÑ…ÉÑÑ¥Ù¥Ñä¡¥¹Ñ•¹Ð¤ì(€€€€€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€€€€€€¼¼ƒ‚š‡‚šû‚š¿‚šó‚šû‚šË‚š\ƒ‚š³‚š£‚ž7‚šœƒ‚šç‚š³‚žƒ‚š£‚šø°ƒ‚š¿‚š“‚šW‚ž7‚šß‚šŒƒ‚š£‚šøƒ‚š‚š«‚š‡‚ž‚š|ƒ‚šW‚šÃ‚šøƒ‚šç‚š¿‚šð(€€€€€€€€€€€€€€€ô¤ì(€€€€€€€€€€€ô¤ì((€€€€€€€€€€€‘¥…±½œ¹Í¡½Ü ¤ì(€€€€€€€€€€€É•ÑÕÉ¸ì(€€€€€€€ô((€€€€€€€±•ÉÑ¥…±½œ¹	Õ¥±‘•È‰Õ¥±‘•È€ô¹•Ü±•ÉÑ¥…±½œ¹	Õ¥±‘•È¡Ñ¡¥Ì¤(€€€€€€€€€€€€€€€€¹Í•ÑQ¥Ñ±”¡Ñ¥Ñ±”¤(€€€€€€€€€€€€€€€€¹Í•Ñ5•ÍÍ…”¡µ•ÍÍ…”¤(€€€€€€€€€€€€€€€€¹Í•Ñ…¹•±…‰±”¡ÑÉÕ”¤ì((€€€€€€€¥˜€ ……Á­UÉ°¹¥ÍµÁÑä ¤¤ì(€€€€€€€€€€€‰Õ¥±‘•È¹Í•ÑA½Í¥Ñ¥Ù•	ÕÑÑ½¸ ‹‚š‡‚šû‚š'‚š£‚šË‚ž/‚š„ƒ‚šW‚šÃ‚ž‚š ˆ°€¡‘¥…±½œ°Ý¡¥ ¤€´øì(€€€€€€€€€€€€€€€%¹Ñ•¹Ð¥¹Ñ•¹Ð€ô¹•Ü%¹Ñ•¹Ð¡%¹Ñ•¹Ð¹Q%=9}Y%\°UÉ¤¹Á…ÉÍ”¡…Á­UÉ°¤¤ì(€€€€€€€€€€€€€€€ÍÑ…ÉÑÑ¥Ù¥Ñä¡¥¹Ñ•¹Ð¤ì(€€€€€€€€€€€ô¤ì(€€€€€€€€€€€‰Õ¥±‘•È¹Í•Ñ9•…Ñ¥Ù•	ÕÑÑ½¸ ‹‚š«‚šÃ‚žˆ°€¡‘¥…±½œ°Ý¡¥ ¤€´ø‘¥…±½œ¹‘¥Íµ¥ÍÌ ¤¤ì(€€€€€€€ô•±Í”ì(€€€€€€€€€€€‰Õ¥±‘•È¹Í•ÑA½Í¥Ñ¥Ù•	ÕÑÑ½¸ ‹‚šƒ‚šÿ‚šTƒ‚š‚šo‚žˆ°€¡‘¥…±½œ°Ý¡¥ ¤€´ø‘¥…±½œ¹‘¥Íµ¥ÍÌ ¤¤ì(€€€€€€€ô((€€€€€€€‰Õ¥±‘•È¹Í¡½Ü ¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”Ù½¥±½…‘M¥Ñ” ¤ì(€€€€€€€¥˜€¡¥Í9•ÑÝ½É­Ù…¥±…‰±” ¤¤ì(€€€€€€€€€€€½™™±¥¹•1…å½ÕÐ¹Í•ÑY¥Í¥‰¥±¥Ñä¡Y¥•Ü¹=9¤ì(€€€€€€€€€€€Ý•‰Y¥•Ü¹Í•ÑY¥Í¥‰¥±¥Ñä¡Y¥•Ü¹Y%M%	1¤ì(€€€€€€€€€€€Ý•‰Y¥•Ü¹±½…‘UÉ°¡•ÑMÑÉ¥¹œ¡H¹ÍÑÉ¥¹œ¹Í¥Ñ•}ÕÉ°¤¤ì(€€€€€€€ô•±Í”ì(€€€€€€€€€€€ÍÝ¥Á•I•™É•Í ¹Í•ÑI•™É•Í¡¥¹œ¡™…±Í”¤ì(€€€€€€€€€€€½™™±¥¹•1…å½ÕÐ¹Í•ÑY¥Í¥‰¥±¥Ñä¡Y¥•Ü¹Y%M%	1¤ì(€€€€€€€€€€€Ý•‰Y¥•Ü¹Í•ÑY¥Í¥‰¥±¥Ñä¡Y¥•Ü¹=9¤ì(€€€€€€€€€€€Q½…ÍÐ¹µ…­•Q•áÐ¡Ñ¡¥Ì°€‹‚š‚š£‚ž7‚š‚šû‚šÃ‚š£‚ž‚š|ƒ‚šã‚š‚š¿‚ž/‚š\ƒ‚š£‚ž‚šˆ°Q½…ÍÐ¹19Q!}M!=IP¤¹Í¡½Ü ¤ì(€€€€€€€ô(€€€ô((€€€ÁÉ¥Ù…Ñ”‰½½±•…¸¥Í9•ÑÝ½É­Ù…¥±…‰±” ¤ì(€€€€€€€½¹¹•Ñ¥Ù¥Ñå5…¹…•È´€ô€¡½¹¹•Ñ¥Ù¥Ñå5…¹…•È¤•ÑMåÍÑ•µM•ÉÙ¥”¡½¹Ñ•áÐ¹=99Q%Y%Qe}MIY%¤ì(€€€€€€€9•ÑÝ½É­%¹™¼¥¹™¼€ô´€„ô¹Õ±°€ü´¹•ÑÑ¥Ù•9•ÑÝ½É­%¹™¼ ¤€è¹Õ±°ì(€€€€€€€É•ÑÕÉ¸¥¹™¼€„ô¹Õ±°€˜˜¥¹™¼¹¥Í½¹¹•Ñ• ¤ì(€€€ô((€€€MÕÁÁÉ•ÍÍ]…É¹¥¹Ì ‰M•Ñ)…Ù…MÉ¥ÁÑ¹…‰±•ˆ¤(€€€ÁÉ¥Ù…Ñ”Ù½¥Í•ÑÕÁ]•‰Y¥•Ü ¤ì(€€€€€€€]•‰M•ÑÑ¥¹ÌÍ•ÑÑ¥¹Ì€ôÝ•‰Y¥•Ü¹•ÑM•ÑÑ¥¹Ì ¤ì(€€€€€€€Í•ÑÑ¥¹Ì¹Í•Ñ)…Ù…MÉ¥ÁÑ¹…‰±•¡ÑÉÕ”¤ì(€€€€€€€Í•ÑÑ¥¹Ì¹Í•Ñ½µMÑ½É…•¹…‰±•¡ÑÉÕ”¤ì(€€€€€€€Í•ÑÑ¥¹Ì¹Í•Ñ…Ñ…‰…Í•¹…‰±•¡ÑÉÕ”¤ì(€€€€€€€Í•ÑÑ¥¹Ì¹Í•Ñ1½…‘]¥Ñ¡=Ù•ÉÙ¥•Ý5½‘”¡ÑÉÕ”¤ì(€€€€€€€Í•ÑÑ¥¹Ì¹Í•ÑUÍ•]¥‘•Y¥•ÝA½ÉÐ¡ÑÉÕ”¤ì(€€€€€€€Í•ÑÑ¥¹Ì¹Í•ÑMÕÁÁ½ÉÑi½½´¡ÑÉÕ”¤ì(€€€€€€€Í•ÑÑ¥¹Ì¹Í•Ñ	Õ¥±Ñ%¹i½½µ½¹ÑÉ½±Ì¡™…±Í”¤ì(€€€€€€€Í•ÑÑ¥¹Ì¹Í•Ñ5¥á•‘½¹Ñ•¹Ñ5½‘”¡]•‰M•ÑÑ¥¹Ì¹5%a}=9Q9Q}1]eM}11=\¤ì(€€€€€€€Í•ÑÑ¥¹Ì¹Í•Ñ…¡•5½‘”¡]•‰M•ÑÑ¥¹Ì¹1=}U1P¤ì(€€€€€€€Í•ÑÑ¥¹Ì¹Í•Ñ±±½Ý¥±••ÍÌ¡ÑÉÕ”¤ì(€€€€€€€Í•ÑÑ¥¹Ì¹Í•Ñ5•‘¥…A±…å‰…­I•ÅÕ¥É•ÍUÍ•É•ÍÑÕÉ”¡™…±Í”¤ì((€€€€€€€½½­¥•5…¹…•È¹•Ñ%¹ÍÑ…¹” ¤¹Í•Ñ•ÁÑ½½­¥”¡ÑÉÕ”¤ì(€€€€€€€½½­¥•5…¹…•È¹•Ñ%¹ÍÑ…¹” ¤¹Í•Ñ•ÁÑQ¡¥É‘A…ÉÑå½½­¥•Ì¡Ý•‰Y¥•Ü°ÑÉÕ”¤ì((€€€€€€€Ý•‰Y¥•Ü¹Í•Ñ]•‰Y¥•Ý±¥•¹Ð¡¹•Ü]•‰Y¥•Ý±¥•¹Ð ¤ì(€€€€€€€€€€€=Ù•ÉÉ¥‘”(€€€€€€€€€€€ÁÕ‰±¥Œ‰½½±•…¸Í¡½Õ±‘=Ù•ÉÉ¥‘•UÉ±1½…‘¥¹œ¡]•‰Y¥•ÜÙ¥•Ü°MÑÉ¥¹œÕÉ°¤ì(€€€€€€€€€€€€€€€¥˜€¡ÕÉ°€ôô¹Õ±°¤É•ÑÕÉ¸™…±Í”ì((€€€€€€€€€€€€€€€€¼¼9½¸µ¡ÑÑÀ¡Ì¤±¥¹­Ì€¡Ñ•°è°µ…¥±Ñ¼è°Ý¡…ÑÍ…ÁÀ°ÕÁ¤Á…åµ•¹Ð…ÁÁÌƒ‚š‚š“‚ž7‚š¿‚šû‚š›‚šü¤ƒ‚š³‚šû‚š‚šÃ‚ž‚šÀƒ‚š‚ž7‚š¿‚šû‚š«‚žƒ‚š[‚ž‚šË‚š³‚ž(€€€€€€€€€€€€€€€¥˜€ …ÕÉ°¹ÍÑ…ÉÑÍ]¥Ñ  ‰¡ÑÑÀè¼¼ˆ¤€˜˜€…ÕÉ°¹ÍÑ…ÉÑÍ]¥Ñ  ‰¡ÑÑÁÌè¼¼ˆ¤¤ì(€€€€€€€€€€€€€€€€€€€ÑÉäì(€€€€€€€€€€€€€€€€€€€€€€€%¹Ñ•¹Ð¥¹Ñ•¹Ð€ô¹•Ü%¹Ñ•¹Ð¡%¹Ñ•¹Ð¹Q%=9}Y%\°UÉ¤¹Á…ÉÍ”¡ÕÉ°¤¤ì(€€€€€€€€€€€€€€€€€€€€€€€ÍÑ…ÉÑÑ¥Ù¥Ñä¡¥¹Ñ•¹Ð¤ì(€€€€€€€€€€€€€€€€€€€ô…Ñ €¡á•ÁÑ¥½¸”¤ì(€€€€€€€€€€€€€€€€€€€€€€€Q½…ÍÐ¹µ…­•Q•áÐ¡5…¥¹Ñ¥Ù¥Ñä¹Ñ¡¥Ì°€‹‚š?‚šƒ‚šË‚šÿ‚š‚šW‚š‚šüƒ‚š[‚ž/‚šË‚šû‚šÀƒ‚š»‚š“‚ž,ƒ‚šW‚ž/‚š£‚ž,ƒ‚š‚ž7‚š¿‚šû‚š¨ƒ‚š£‚ž‚šˆ°Q½…ÍÐ¹19Q!}M!=IP¤¹Í¡½Ü ¤ì(€€€€€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€€€€€É•ÑÕÉ¸ÑÉÕ”ì(€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€€¼¼ƒ‚š£‚šÿ‚šs‚ž‚šÀƒ‚šã‚šû‚š‚š‚ž‚šÀƒ‚šã‚š°ƒ‚šË‚šÿ‚š‚šT€£‚š‚ž7‚š¿‚šû‚š‡‚š»‚šÿ‚š ƒ‚š«‚ž7‚š¿‚šû‚š£‚ž‚šÈƒ‚šã‚šä¤ƒ‚š‚ž7‚š¿‚šû‚š«‚ž‚šÀƒ‚š·‚šÿ‚š“‚šÃ‚ž‚šƒ‚šË‚ž/‚š„ƒ‚šç‚š³‚ž(€€€€€€€€€€€€€€€É•ÑÕÉ¸™…±Í”ì(€€€€€€€€€€€ô((€€€€€€€€€€€=Ù•ÉÉ¥‘”(€€€€€€€€€€€ÁÕ‰±¥ŒÙ½¥½¹A…•MÑ…ÉÑ•¡]•‰Y¥•ÜÙ¥•Ü°MÑÉ¥¹œÕÉ°°…¹‘É½¥¹É…Á¡¥Ì¹	¥Ñµ…À™…Ù¥½¸¤ì(€€€€€€€€€€€€€€€ÍÕÁ•È¹½¹A…•MÑ…ÉÑ•¡Ù¥•Ü°ÕÉ°°™…Ù¥½¸¤ì(€€€€€€€€€€€€€€€ÁÉ½É•ÍÍ	…È¹Í•ÑY¥Í¥‰¥±¥Ñä¡Y¥•Ü¹Y%M%	1¤ì(€€€€€€€€€€€ô((€€€€€€€€€€€=Ù•ÉÉ¥‘”(€€€€€€€€€€€ÁÕ‰±¥ŒÙ½¥½¹A…•¥¹¥Í¡•¡]•‰Y¥•ÜÙ¥•Ü°MÑÉ¥¹œÕÉ°¤ì(€€€€€€€€€€€€€€€ÍÕÁ•È¹½¹A…•¥¹¥Í¡•¡Ù¥•Ü°ÕÉ°¤ì(€€€€€€€€€€€€€€€ÁÉ½É•ÍÍ	…È¹Í•ÑY¥Í¥‰¥±¥Ñä¡Y¥•Ü¹=9¤ì(€€€€€€€€€€€€€€€ÍÝ¥Á•I•™É•Í ¹Í•ÑI•™É•Í¡¥¹œ¡™…±Í”¤ì(€€€€€€€€€€€ô((€€€€€€€€€€€=Ù•ÉÉ¥‘”(€€€€€€€€€€€ÁÕ‰±¥ŒÙ½¥½¹I••¥Ù•‘ÉÉ½È¡]•‰Y¥•ÜÙ¥•Ü°¥¹Ð•ÉÉ½É½‘”°MÑÉ¥¹œ‘•ÍÉ¥ÁÑ¥½¸°MÑÉ¥¹œ™…¥±¥¹UÉ°¤ì(€€€€€€€€€€€€€€€ÍÕÁ•È¹½¹I••¥Ù•‘ÉÉ½È¡Ù¥•Ü°•ÉÉ½É½‘”°‘•ÍÉ¥ÁÑ¥½¸°™…¥±¥¹UÉ°¤ì(€€€€€€€€€€€€€€€¥˜€ …¥Í9•ÑÝ½É­Ù…¥±…‰±” ¤¤ì(€€€€€€€€€€€€€€€€€€€½™™±¥¹•1…å½ÕÐ¹Í•ÑY¥Í¥‰¥±¥Ñä¡Y¥•Ü¹Y%M%	1¤ì(€€€€€€€€€€€€€€€€€€€Ý•‰Y¥•Ü¹Í•ÑY¥Í¥‰¥±¥Ñä¡Y¥•Ü¹=9¤ì(€€€€€€€€€€€€€€€ô(€€€€€€€€€€€ô(€€€€€€€ô¤ì((€€€€€€€Ý•‰Y¥•Ü¹Í•Ñ]•‰¡É½µ•±¥•¹Ð¡¹•Ü]•‰¡É½µ•±¥•¹Ð ¤ì(€€€€€€€€€€€=Ù•ÉÉ¥‘”(€€€€€€€€€€€ÁÕ‰±¥ŒÙ½¥½¹AÉ½É•ÍÍ¡…¹•¡]•‰Y¥•ÜÙ¥•Ü°¥¹Ð¹•ÝAÉ½É•ÍÌ¤ì(€€€€€€€€€€€€€€€ÁÉ½É•ÍÍ	…È¹Í•ÑAÉ½É•ÍÌ¡¹•ÝAÉ½É•ÍÌ¤ì(€€€€€€€€€€€€€€€¥˜€¡¹•ÝAÉ½É•ÍÌ€øô€ÄÀÀ¤ì(€€€€€€€€€€€€€€€€€€€ÁÉ½É•ÍÍ	…È¹Í•ÑY¥Í¥‰¥±¥Ñä¡Y¥•Ü¹=9¤ì(€€€€€€€€€€€€€€€ô(€€€€€€€€€€€ô((€€€€€€€€€€€€¼¼ƒ‚šo‚š³‚šü¿‚š¯‚šû‚š‚šÈƒ‚š‚š«‚šË‚ž/‚š„ƒ‚šã‚šû‚š«‚ž/‚šÃ‚ž7‚š|ƒŠPƒ‚š·‚šW‚š»‚šû‚šÃ‚ž7‚šàƒ‚š‚ž7‚š¿‚šû‚š‡‚š»‚šÿ‚š ƒ‚š«‚ž7‚šÃ‚šû‚š£‚ž‚šË‚žƒ‚š«‚ž7‚šÃ‚ž/‚š‡‚šû‚šW‚ž7‚š|ƒ‚šo‚š³‚šüƒ‚š‚š«‚šË‚ž/‚š‡‚ž‚šÀƒ‚šs‚š£‚ž7‚š¼ƒ‚š›‚šÃ‚šW‚šû‚šÀ(€€€€€€€€€€€=Ù•ÉÉ¥‘”(€€€€€€€€€€€ÁÕ‰±¥Œ‰½½±•…¸½¹M¡½Ý¥±•¡½½Í•È¡]•‰Y¥•ÜÝ•‰Y¥•Ü°Y…±Õ•…±±‰…¬ñUÉ¥mtø…±±‰…¬°¥±•¡½½Í•ÉA…É…µÌÁ…É…µÌ¤ì(€€€€€€€€€€€€€€€¥˜€¡™¥±•A…Ñ¡…±±‰…¬€„ô¹Õ±°¤ì(€€€€€€€€€€€€€€€€€€€™¥±•A…Ñ¡…±±‰…¬¹½¹I••¥Ù•Y…±Õ”¡¹Õ±°¤ì(€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€™¥±•A…Ñ¡…±±‰…¬€ô…±±‰…¬ì((€€€€€€€€€€€€€€€%¹Ñ•¹Ð¥¹Ñ•¹Ð€ôÁ…É…µÌ¹É•…Ñ•%¹Ñ•¹Ð ¤ì(€€€€€€€€€€€€€€€ÑÉäì(€€€€€€€€€€€€€€€€€€€ÍÑ…ÉÑÑ¥Ù¥Ñå½ÉI•ÍÕ±Ð¡¥¹Ñ•¹Ð°%1}!==MI}IEUMQ}=¤ì(€€€€€€€€€€€€€€€ô…Ñ €¡á•ÁÑ¥½¸”¤ì(€€€€€€€€€€€€€€€€€€€™¥±•A…Ñ¡…±±‰…¬€ô¹Õ±°ì(€€€€€€€€€€€€€€€€€€€Q½…ÍÐ¹µ…­•Q•áÐ¡5…¥¹Ñ¥Ù¥Ñä¹Ñ¡¥Ì°€‹‚š¯‚šû‚š‚šÈƒ‚š³‚šû‚šo‚šû‚šƒ‚šW‚šÃ‚šøƒ‚š¿‚šû‚š¿‚šó‚š£‚šüˆ°Q½…ÍÐ¹19Q!}M!=IP¤¹Í¡½Ü ¤ì(€€€€€€€€€€€€€€€€€€€É•ÑÕÉ¸™…±Í”ì(€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€É•ÑÕÉ¸ÑÉÕ”ì(€€€€€€€€€€€ô((€€€€€€€€€€€€¼¼ƒ‚šW‚ž7‚š¿‚šû‚š»‚ž‚šÃ‚šøƒ‚š«‚šû‚šÃ‚š»‚šÿ‚šÛ‚š ƒ‚š«‚ž7‚šÃ‚š»‚ž7‚š«‚š|€¡EHƒ‚šã‚ž7‚šW‚ž7‚š¿‚šû‚š ¿‚šo‚š³‚šüƒ‚š“‚ž/‚šË‚šû‚šÀƒ‚š¯‚šÿ‚šk‚šû‚šÀƒ‚š—‚šû‚šW‚šË‚ž¤(€€€€€€€€€€€=Ù•ÉÉ¥‘”(€€€€€€€€€€€ÁÕ‰±¥ŒÙ½¥½¹A•Éµ¥ÍÍ¥½¹I•ÅÕ•ÍÐ¡™¥¹…°A•Éµ¥ÍÍ¥½¹I•ÅÕ•ÍÐÉ•ÅÕ•ÍÐ¤ì(€€€€€€€€€€€€€€€ÉÕ¹=¹U¥Q¡É•…  ¤€´øÉ•ÅÕ•ÍÐ¹É…¹Ð¡É•ÅÕ•ÍÐ¹•ÑI•Í½ÕÉ•Ì ¤¤¤ì(€€€€€€€€€€€ô(€€€€€€€ô¤ì((€€€€€€€€¼¼ƒ‚šã‚šû‚š‚š|ƒ‚š—‚ž‚šW‚žƒ‚š¯‚šû‚š‚šÈƒ‚š‡‚šû‚š'‚š£‚šË‚ž/‚š„ƒ‚šW‚šÃ‚šË‚ž€£‚š‚š£‚š·‚š¿‚šó‚ž‚šà¿‚šÃ‚šÿ‚šã‚šÿ‚š|ƒ‚š«‚šÿ‚š‡‚šÿ‚š?‚š¬ƒ‚š‚š“‚ž7‚š¿‚šû‚š›‚šü¤ƒ‚š³‚ž7‚šÃ‚šû‚š'‚šs‚šû‚šÃ‚ž¿‚š‡‚šû‚š'‚š£‚šË‚ž/‚š„ƒ‚š»‚ž7‚š¿‚šû‚š£‚ž‚šs‚šû‚šÃ‚žƒ‚š«‚šû‚šƒ‚šû‚š£‚ž,ƒ‚šç‚š³‚ž(€€€€€€€Ý•‰Y¥•Ü¹Í•Ñ½Ý¹±½…‘1¥ÍÑ•¹•È ¡ÕÉ°°ÕÍ•É•¹Ð°½¹Ñ•¹Ñ¥ÍÁ½Í¥Ñ¥½¸°µ¥µ•ÑåÁ”°½¹Ñ•¹Ñ1•¹Ñ ¤€´øì(€€€€€€€€€€€ÑÉäì(€€€€€€€€€€€€€€€%¹Ñ•¹Ð¥¹Ñ•¹Ð€ô¹•Ü%¹Ñ•¹Ð¡%¹Ñ•¹Ð¹Q%=9}Y%\°UÉ¤¹Á…ÉÍ”¡ÕÉ°¤¤ì(€€€€€€€€€€€€€€€ÍÑ…ÉÑÑ¥Ù¥Ñä¡¥¹Ñ•¹Ð¤ì(€€€€€€€€€€€ô…Ñ €¡á•ÁÑ¥½¸”¤ì(€€€€€€€€€€€€€€€Q½…ÍÐ¹µ…­•Q•áÐ¡Ñ¡¥Ì°€‹‚š‡‚šû‚š'‚š£‚šË‚ž/‚š„ƒ‚šÛ‚ž‚šÃ‚ž)}¦¾Tƒ‚š¿‚šû‚š¿‚šó‚š£‚šüˆ°Q½…ÍÐ¹19Q!}M!=IP¤¹Í¡½Ü ¤ì(€€€€€€€€€€€ô(€€€€€€€ô¤ì(€€€ô((€€€=Ù•ÉÉ¥‘”(€€€ÁÉ½Ñ•Ñ•Ù½¥½¹Ñ¥Ù¥ÑåI•ÍÕ±Ð¡¥¹ÐÉ•ÅÕ•ÍÑ½‘”°¥¹ÐÉ•ÍÕ±Ñ½‘”°%¹Ñ•¹Ð‘…Ñ„¤ì(€
