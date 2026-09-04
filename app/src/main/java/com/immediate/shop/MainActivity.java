@@ -82,8 +82,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         requestNotificationPermissionIfNeeded();
+        subscribeToNotificationTopic();
         scheduleNewProductCheck();
         checkForAppUpdate();
+    }
+
+    // সব ইউজারকে "all_users" টপিকে সাবস্ক্রাইব করা হচ্ছে,
+    // যাতে সেন্ডার অ্যাপ থেকে এই টপিকে পাঠানো নোটিফিকেশন সবাই পায়
+    private void subscribeToNotificationTopic() {
+        com.google.firebase.messaging.FirebaseMessaging.getInstance()
+                .subscribeToTopic("all_users");
     }
 
     private void requestNotificationPermissionIfNeeded() {
