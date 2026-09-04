@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "994086965348",
+    "project_id": "immediate-shop",
+    "storage_bucket": "immediate-shop.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994086965348:android:d3890908d642e23f6e0f71",
+        "android_client_info": {
+          "package_name": "com.immediate.shop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEqi4IXZVpvWQP93-FJOtLCUn25pJ3XDY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
